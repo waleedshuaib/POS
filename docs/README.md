@@ -19,5 +19,6 @@ Short, scannable reference for working on this codebase. Each file is standalone
 | 13 | Contributing | [13-contributing.md](./13-contributing.md) |
 | 14 | Future enhancements & hardening | [14-future-enhancements.md](./14-future-enhancements.md) |
 | 15 | Multi-terminal supermarket | [15-multi-terminal.md](./15-multi-terminal.md) |
+| 16 | Packaging & deployment | [16-packaging-deployment.md](./16-packaging-deployment.md) |
 
 For end-user docs, open the app and go to the **Help** page.

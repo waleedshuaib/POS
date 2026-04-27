@@ -4,6 +4,8 @@ import { registerIpc } from './ipc/router';
 import './ipc/handlers';
 import { initDatabase, closeDatabase } from './db/client';
 import { ensureSeeded } from './seed';
+import { configureLogger, attachProcessHandlers, log } from './logger';
+import { configureBackupScheduler, stopBackupScheduler } from './backup-scheduler';
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -36,9 +38,15 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  configureLogger(app.getPath('userData'));
+  attachProcessHandlers();
+  log('info', 'app.ready');
+
   await initDatabase();
   await ensureSeeded();
   registerIpc(ipcMain);
+
+  configureBackupScheduler(app.getPath('userData'));
 
   createWindow();
 
@@ -48,6 +56,8 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  log('info', 'app.shutdown');
+  stopBackupScheduler();
   closeDatabase();
   if (process.platform !== 'darwin') app.quit();
 });
