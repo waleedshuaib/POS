@@ -149,6 +149,7 @@ export CSC_KEY_PASSWORD=...
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `ENOENT: no such file or directory, rename '.../Electron.app/Contents/MacOS/Electron'` during build | **Corrupted Electron zip in `~/Library/Caches/electron/`** — usually from an interrupted download. electron-builder silently tolerates a bad zip, leaving `Contents/MacOS/` empty, then fails at the rename with a misleading error. | `rm -rf ~/Library/Caches/electron/ dist/ && npm run package:mac:arm64`. Forces a fresh download. Confirm the cache is actually broken with `unzip -l ~/Library/Caches/electron/electron-v32.3.3-darwin-arm64.zip` — if you see "extra bytes at beginning or within zipfile", it's corrupt. |
 | `hdiutil resize: Resource temporarily unavailable (35)` | A previous DMG temp image is still attached | `hdiutil info` to list, then `hdiutil detach /dev/diskN -force` for any unnamed images. Then retry. |
 | `hdiutil resize` keeps failing across retries | Spotlight scanning the temp DMG, or low disk space | Easy: switch to ZIP — `npm run package:mac:zip`. Long-term: exclude `/private/var/folders` from Spotlight. |
 | arm64 build fails after x64 succeeds | Concurrent `hdiutil` resource pressure | Build per-arch: `npm run package:mac:arm64` then `npm run package:mac:x64`. Faster + fewer collisions. |
