@@ -20,7 +20,18 @@ npm run package:win                  # → dist/Mizan POS Setup 1.0.1.exe
 | Target | Output | Notes |
 |---|---|---|
 | macOS Universal | `dist/Mizan POS-X.Y.Z-arm64.dmg` + `-x64.dmg` | Intel + Apple Silicon binaries |
+| macOS ZIP fallback | `dist/Mizan POS-X.Y.Z-arm64-mac.zip` + `-x64-mac.zip` | When `hdiutil` is being flaky |
 | Windows x64 | `dist/Mizan POS Setup X.Y.Z.exe` | NSIS installer with custom path option |
+
+Per-arch / fallback scripts:
+
+```bash
+npm run package:mac          # both archs, dmg + zip
+npm run package:mac:arm64    # arm64 only (faster on M-series)
+npm run package:mac:x64      # x64 only
+npm run package:mac:zip      # ZIP only — bypasses hdiutil entirely
+npm run package:win
+```
 
 Configure once in `package.json` → `build` (already done). For Linux, add a `linux` block targeting `AppImage` or `deb`.
 
@@ -133,6 +144,17 @@ export CSC_KEY_PASSWORD=...
 | Arabic receipt shows boxes | Amiri font missing | Drop `Amiri-Regular.ttf` into resources before packaging, or app falls back to system font |
 | Thermal printer silent | Not enabled in settings | *Settings → Printer → Enable thermal*; PDF preview opens as fallback |
 | Backup folder empty | First backup hasn't fired yet | App takes one on launch if last one was >24h ago, then once daily |
+
+## Troubleshooting the BUILD
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `hdiutil resize: Resource temporarily unavailable (35)` | A previous DMG temp image is still attached | `hdiutil info` to list, then `hdiutil detach /dev/diskN -force` for any unnamed images. Then retry. |
+| `hdiutil resize` keeps failing across retries | Spotlight scanning the temp DMG, or low disk space | Easy: switch to ZIP — `npm run package:mac:zip`. Long-term: exclude `/private/var/folders` from Spotlight. |
+| arm64 build fails after x64 succeeds | Concurrent `hdiutil` resource pressure | Build per-arch: `npm run package:mac:arm64` then `npm run package:mac:x64`. Faster + fewer collisions. |
+| `code signing skipped: cannot find valid Developer ID` warning | Self-explanatory; no Apple Developer cert configured | Safe to ignore for unsigned builds. To sign: see [Code signing](#code-signing-required-for-scale) below. |
+| `auditRepo dynamically imported but also statically imported` warning | Mixed import styles | Already fixed in main; if you see it on a service you added, switch the dynamic `await import(...)` to a top-level static `import`. |
+| `"command failed: prebuild-install"` then node-gyp errors during install | Python 3.14 broke node-gyp | Use Python 3.12 or 3.13: `brew install python@3.12 && npm config set python /opt/homebrew/bin/python3.12`. |
 
 ## Per-shop "branded" installer (advanced)
 

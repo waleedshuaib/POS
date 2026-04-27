@@ -31,6 +31,9 @@
     "db:reset": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/tsx/dist/cli.mjs scripts/reset-db.ts",
     "package": "npm run build && electron-builder",
     "package:mac": "npm run build && electron-builder --mac",
+    "package:mac:arm64": "npm run build && electron-builder --mac --arm64",
+    "package:mac:x64": "npm run build && electron-builder --mac --x64",
+    "package:mac:zip": "npm run build && electron-builder --mac zip",
     "package:win": "npm run build && electron-builder --win"
   },
   "dependencies": {
@@ -115,10 +118,8 @@
     ],
     "mac": {
       "target": [
-        {
-          "target": "dmg",
-          "arch": ["x64", "arm64"]
-        }
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
       ],
       "category": "public.app-category.business"
     },

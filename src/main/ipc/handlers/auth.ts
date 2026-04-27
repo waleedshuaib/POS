@@ -4,6 +4,7 @@ import { defineRoute, registerRoutes } from '../router';
 import { db, schema } from '../../db/client';
 import { hashPassword, verifyPassword } from '../../auth/password';
 import { createSession, destroySession } from '../../auth/session';
+import { auditRepo } from '../../repos/auditRepo';
 
 registerRoutes({
   'auth.login': defineRoute({
@@ -92,7 +93,6 @@ registerRoutes({
         role: target.role,
       });
       // Audit-log so the admin's impersonation is traceable.
-      const { auditRepo } = await import('../../repos/auditRepo');
       auditRepo.log({
         userId: ctx.session.userId,
         action: 'auth.impersonate',
