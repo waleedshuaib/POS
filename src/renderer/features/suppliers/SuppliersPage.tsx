@@ -6,7 +6,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { Modal } from '../../components/Modal';
 import { Field, ServerError, ValidationSummary } from '../../components/Validation';
 import { currency } from '../../lib/format';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 
 interface Supplier {
   id: number;
@@ -43,6 +43,11 @@ export function SuppliersPage() {
       setEditing(null);
       setSubmitted(false);
     },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: number) => api('suppliers.remove', { id }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['suppliers'] }),
   });
 
   function show(field: string): string | undefined {
@@ -83,9 +88,17 @@ export function SuppliersPage() {
                 <td className={`p-3 ${s.balance > 0 ? 'text-orange-600 font-semibold' : 'text-slate-500'}`}>
                   {currency(s.balance)}
                 </td>
-                <td className="p-3">
+                <td className="p-3 flex gap-1">
                   <button className="btn-secondary p-1.5" onClick={() => { setEditing(s); setSubmitted(false); }} title={t('common.edit')}>
                     <Pencil size={14} />
+                  </button>
+                  <button
+                    className="btn-danger p-1.5"
+                    onClick={() => confirm(t('common.confirmDelete')) && remove.mutate(s.id)}
+                    title={t('common.delete')}
+                    disabled={s.balance !== 0}
+                  >
+                    <Trash2 size={14} />
                   </button>
                 </td>
               </tr>

@@ -50,6 +50,11 @@ export function CustomersPage() {
     },
   });
 
+  const remove = useMutation({
+    mutationFn: (id: number) => api('customers.remove', { id }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['customers'] }),
+  });
+
   const pay = useMutation({
     mutationFn: (i: { id: number; amount: number }) => api('customers.payCredit', i),
     onSuccess: () => {
@@ -108,7 +113,7 @@ export function CustomersPage() {
                 <td className={`p-3 ${c.balance > 0 ? 'text-orange-600 font-semibold' : 'text-slate-500'}`}>
                   {currency(c.balance)}
                 </td>
-                <td className="p-3 flex gap-2">
+                <td className="p-3 flex gap-2 flex-wrap">
                   <button className="btn-secondary p-1.5" onClick={() => { setEditing(c); setSubmitted(false); }} title={t('common.edit')}>
                     <Pencil size={14} />
                   </button>
@@ -124,6 +129,14 @@ export function CustomersPage() {
                       <CreditCard size={14} /> {t('customers.payCredit')}
                     </button>
                   )}
+                  <button
+                    className="btn-danger p-1.5"
+                    onClick={() => confirm(t('common.confirmDelete')) && remove.mutate(c.id)}
+                    title={t('common.delete')}
+                    disabled={c.balance !== 0}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </td>
               </tr>
             ))}

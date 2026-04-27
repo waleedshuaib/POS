@@ -112,6 +112,7 @@ export function computeTotals(
 export interface PaymentInput {
   method: 'cash' | 'card' | 'bank_transfer' | 'credit' | 'check';
   amount: number;
+  reference?: string;
 }
 
 export interface PaymentResult {

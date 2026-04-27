@@ -2,9 +2,33 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
+/**
+ * Pure-JS deps that are safe to bundle into out/main/index.js (no native code,
+ * no dynamic require()s of files outside the package). Bundling them avoids
+ * relying on electron-builder's transitive node_modules walk, which has been
+ * flaky for archiver's dependency tree (zip-stream → archiver-utils
+ * occasionally getting dropped).
+ *
+ * Native modules MUST be externalized (Electron loads .node files via dlopen,
+ * not via the JS bundler).
+ */
+const BUNDLE_INTO_MAIN = [
+  'archiver',
+  'archiver-utils',
+  'zip-stream',
+  'compress-commons',
+  'crc32-stream',
+  'extract-zip',
+  'pdf-lib',
+  '@pdf-lib/fontkit',
+  'fontkit',
+  'fuse.js',
+  'zod',
+];
+
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: BUNDLE_INTO_MAIN })],
     resolve: {
       alias: {
         '@main': resolve('src/main'),
