@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { PageHeader } from '../../components/PageHeader';
 import { dateTime } from '../../lib/format';
-import { Database, FolderOpen, FileText, Download, Upload, Printer, RefreshCw, AlertCircle } from 'lucide-react';
+import { Database, FolderOpen, FileText, Download, Upload, Printer, RefreshCw, AlertCircle, Tablet } from 'lucide-react';
 
 interface BackupSlot {
   path: string;
@@ -114,6 +114,20 @@ export function SettingsPage() {
               <input className="input" value={state['currency.symbol'] ?? '₪'} onChange={(e) => set('currency.symbol', e.target.value)} />
             </div>
           </div>
+        </section>
+
+        {/* Display / POS layout */}
+        <section className="card p-5 space-y-3">
+          <h2 className="font-semibold flex items-center gap-2"><Tablet size={18} />{t('settings.posLayout')}</h2>
+          <p className="text-sm text-slate-500">{t('settings.touchModeExplain')}</p>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={state['pos.touch_mode'] === 'true'}
+              onChange={(e) => set('pos.touch_mode', e.target.checked ? 'true' : 'false')}
+            />
+            {t('settings.touchMode')}
+          </label>
         </section>
 
         <section className="card p-5 space-y-3">
