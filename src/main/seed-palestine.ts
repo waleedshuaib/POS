@@ -263,6 +263,10 @@ export const PALESTINE_SETTINGS: Record<string, string> = {
   'printer.arabic_mode': 'image',
   'invoice.prefix': 'INV',
   'pos.touch_mode': 'false',
+  'einvoice.provider': 'none',
+  'einvoice.endpoint': '',
+  'einvoice.merchant_id': '',
+  'einvoice.environment': 'sandbox',
 };
 
 export async function seedPalestineSupermarket(): Promise<void> {

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { PageHeader } from '../../components/PageHeader';
 import { dateTime } from '../../lib/format';
-import { Database, FolderOpen, FileText, Download, Upload, Printer, RefreshCw, AlertCircle, Tablet } from 'lucide-react';
+import { Database, FolderOpen, FileText, Download, Upload, Printer, RefreshCw, AlertCircle, Tablet, KeyRound, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 interface BackupSlot {
   path: string;
@@ -257,6 +257,9 @@ export function SettingsPage() {
           {restore.data?.restartRecommended && <div className="text-xs text-orange-700">{t('settings.restartAfterRestore')}</div>}
         </section>
 
+        {/* License */}
+        <LicenseSection />
+
         {/* Logs */}
         <section className="card p-5 space-y-3">
           <h2 className="font-semibold flex items-center gap-2"><FileText size={18} />{t('settings.logs')}</h2>
@@ -281,5 +284,113 @@ export function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+interface LicenseInfo {
+  state: 'valid' | 'grace' | 'missing' | 'expired' | 'wrongMachine' | 'tampered' | 'invalidPubKey';
+  daysLeft?: number;
+  license?: { issuedTo: string; expires: string; tier: string; issued: string; machineId: string };
+  machineId: string;
+  adminAllowed: boolean;
+}
+
+function LicenseSection() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [text, setText] = useState('');
+  const [showInstall, setShowInstall] = useState(false);
+
+  const status = useQuery({
+    queryKey: ['license.status'],
+    queryFn: () => api<LicenseInfo>('license.status', {}),
+  });
+
+  const install = useMutation({
+    mutationFn: () => api('license.install', { json: text }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['license.status'] });
+      setText('');
+      setShowInstall(false);
+    },
+  });
+
+  const uninstall = useMutation({
+    mutationFn: () => api('license.uninstall', {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['license.status'] }),
+  });
+
+  const s = status.data;
+  const ok = s?.state === 'valid';
+  const warn = s?.state === 'grace';
+  const bad = s && !ok && !warn;
+
+  return (
+    <section className="card p-5 space-y-3">
+      <h2 className="font-semibold flex items-center gap-2">
+        {ok ? <ShieldCheck size={18} className="text-green-600" /> : bad ? <ShieldAlert size={18} className="text-red-600" /> : <KeyRound size={18} />}
+        {t('settings.license')}
+      </h2>
+      {s && (
+        <div className={`text-sm rounded-md p-3 border ${ok ? 'bg-green-50 border-green-200' : warn ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
+          <div className="font-medium">
+            {ok && t('license.state.valid')}
+            {warn && t('license.state.grace', { days: s.daysLeft ?? 0 })}
+            {s.state === 'missing' && t('license.state.missing')}
+            {s.state === 'expired' && t('license.state.expired')}
+            {s.state === 'wrongMachine' && t('license.state.wrongMachine')}
+            {s.state === 'tampered' && t('license.state.tampered')}
+            {s.state === 'invalidPubKey' && t('license.state.invalidPubKey')}
+          </div>
+          {s.license && (
+            <div className="text-xs mt-1 text-slate-700 space-y-0.5">
+              <div>{t('license.issuedTo')}: <span className="font-semibold">{s.license.issuedTo}</span></div>
+              <div>{t('license.tier')}: {s.license.tier}</div>
+              <div>{t('license.expires')}: {s.license.expires}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="text-xs text-slate-500">
+        <div className="font-medium">{t('license.machineId')}</div>
+        <code className="font-mono text-[10px] break-all bg-slate-50 px-2 py-1 rounded mt-1 inline-block">
+          {s?.machineId ?? '...'}
+        </code>
+        <div className="mt-1">{t('license.machineIdHint')}</div>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        <button className="btn-primary" onClick={() => setShowInstall(true)}>
+          <Upload size={14} /> {t('license.install')}
+        </button>
+        {s?.license && (
+          <button className="btn-danger" onClick={() => uninstall.mutate()}>
+            {t('license.uninstall')}
+          </button>
+        )}
+      </div>
+
+      {showInstall && (
+        <div className="space-y-2">
+          <textarea
+            className="input font-mono text-xs"
+            rows={8}
+            placeholder={t('license.pastePlaceholder')}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          {install.error && <div className="text-red-600 text-sm">{(install.error as Error).message}</div>}
+          <div className="flex gap-2">
+            <button className="btn-secondary" onClick={() => { setShowInstall(false); setText(''); }}>
+              {t('common.cancel')}
+            </button>
+            <button className="btn-primary" disabled={!text.trim() || install.isPending} onClick={() => install.mutate()}>
+              {t('common.save')}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

@@ -6,6 +6,7 @@ import { saleRepo } from '../repos/saleRepo';
 import { auditRepo } from '../repos/auditRepo';
 import { customerRepo } from '../repos/partyRepo';
 import { settingsRepo } from '../repos/settingsRepo';
+import { dispatchSale } from '../einvoice/dispatcher';
 import {
   computeTotals,
   computePayments,
@@ -153,7 +154,13 @@ export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
     };
   });
 
-  return tx();
+  const result = tx();
+  // Fire-and-forget: dispatch to e-invoice provider AFTER the local DB
+  // commit. A network failure here must never undo a real cash transaction.
+  if (!isHeld) {
+    void dispatchSale(result.saleId).catch(() => { /* logged inside */ });
+  }
+  return result;
 }
 
 export async function voidSale(saleId: number, userId: number): Promise<void> {

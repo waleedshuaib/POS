@@ -17,3 +17,4 @@ import './handlers/settings';
 import './handlers/backup';
 import './handlers/printer';
 import './handlers/images';
+import './handlers/license';

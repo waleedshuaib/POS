@@ -5,6 +5,10 @@ import { join } from 'path';
 import { initDatabase, closeDatabase, db, schema } from '../../src/main/db/client';
 import { hashPassword } from '../../src/main/auth/password';
 
+// Tests run against a plaintext DB so they don't depend on the SQLCipher
+// driver being installed in the test environment.
+process.env.POS_DB_PLAINTEXT = '1';
+
 export let adminId: number;
 
 export function useTestDb() {

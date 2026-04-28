@@ -6,6 +6,9 @@ import { initDatabase, closeDatabase } from './db/client';
 import { ensureSeeded } from './seed';
 import { configureLogger, attachProcessHandlers, log } from './logger';
 import { configureBackupScheduler, stopBackupScheduler } from './backup-scheduler';
+import { initAutoUpdater } from './auto-updater';
+
+let mainWindow: BrowserWindow | null = null;
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -22,6 +25,8 @@ function createWindow(): void {
       nodeIntegration: false,
     },
   });
+  mainWindow = win;
+  win.on('closed', () => { if (mainWindow === win) mainWindow = null; });
 
   win.on('ready-to-show', () => win.show());
 
@@ -49,6 +54,8 @@ app.whenReady().then(async () => {
   configureBackupScheduler(app.getPath('userData'));
 
   createWindow();
+
+  void initAutoUpdater(() => mainWindow);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

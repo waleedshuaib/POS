@@ -17,7 +17,7 @@
  *
  * Runs as part of `npm test`. Single describe so the scenario is a real story.
  */
-
+process.env.POS_DB_PLAINTEXT = '1';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';

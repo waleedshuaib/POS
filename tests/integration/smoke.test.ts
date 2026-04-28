@@ -5,6 +5,7 @@
  *
  * Runs as part of `npm test` and `npm run verify`.
  */
+process.env.POS_DB_PLAINTEXT = '1';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';

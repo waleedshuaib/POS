@@ -37,7 +37,7 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        external: ['better-sqlite3', 'argon2', 'node-thermal-printer'],
+        external: ['better-sqlite3', 'better-sqlite3-multiple-ciphers', 'argon2', 'node-thermal-printer', 'electron-updater'],
       },
     },
   },

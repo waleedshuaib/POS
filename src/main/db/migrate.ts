@@ -1,4 +1,3 @@
-import type Database from 'better-sqlite3';
 import { readdirSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
@@ -8,7 +7,7 @@ import { join } from 'path';
  * Each file may contain multiple statements separated by `--> statement-breakpoint`.
  * Applied migrations are tracked in `_migrations` table.
  */
-export function runMigrations(sqlite: Database.Database, migrationsDir: string): number {
+export function runMigrations(sqlite: any, migrationsDir: string): number {
   if (!existsSync(migrationsDir)) return 0;
 
   sqlite.exec(`CREATE TABLE IF NOT EXISTS _migrations (
