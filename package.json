@@ -13,6 +13,7 @@
     "postinstall": "electron-rebuild -f",
     "rebuild": "electron-rebuild -f",
     "rebuild:electron": "electron-rebuild -f",
+    "icon": "node scripts/generate-icon.cjs",
     "dev": "electron-vite dev",
     "dev:seed": "POS_SEED=palestine electron-vite dev",
     "build": "electron-vite build",

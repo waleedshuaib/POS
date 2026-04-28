@@ -49,6 +49,7 @@ function buildReceiptData(saleId: number, language: 'ar' | 'en'): ReceiptData {
     changeDue: sale.changeDue,
     header: settings['receipt.header'],
     footer: settings['receipt.footer'],
+    logoPath: settings['receipt.logo_path'] || undefined,
   };
 }
 

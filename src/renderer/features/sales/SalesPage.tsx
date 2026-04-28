@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { useAuth, hasRole } from '../auth/authStore';
 import { PageHeader } from '../../components/PageHeader';
 import { Modal } from '../../components/Modal';
 import { currency, dateTime } from '../../lib/format';
+import { Filter, RotateCw } from 'lucide-react';
 
 interface Sale {
   id: number;
@@ -15,6 +17,7 @@ interface Sale {
   status: 'completed' | 'held' | 'voided' | 'returned';
   createdAt: number;
   customerId: number | null;
+  userId: number;
 }
 interface SaleItem {
   id: number;
@@ -26,18 +29,51 @@ interface SaleItem {
 }
 interface SaleDetail extends Sale {
   items: SaleItem[];
-  payments: Array<{ method: string; amount: number }>;
+  payments: Array<{ method: string; amount: number; reference: string | null }>;
 }
+
+interface UserRow { id: number; username: string; fullName: string; }
 
 export function SalesPage() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const isManager = hasRole(user, 'admin', 'manager');
   const [selected, setSelected] = useState<SaleDetail | null>(null);
   const [returnMode, setReturnMode] = useState(false);
   const [returnQty, setReturnQty] = useState<Record<number, number>>({});
   const [returnReason, setReturnReason] = useState('');
 
-  const list = useQuery({ queryKey: ['sales'], queryFn: () => api<Sale[]>('sales.list', {}) });
+  // ── Filters ─────────────────────────────────────────────────────────────
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [status, setStatus] = useState<'' | Sale['status']>('');
+  const [filterUserId, setFilterUserId] = useState<number | ''>('');
+
+  const filterPayload = useMemo(() => {
+    const p: Record<string, unknown> = {};
+    if (from) p.from = new Date(from).toISOString();
+    if (to) p.to = new Date(to).toISOString();
+    if (status) p.status = status;
+    if (filterUserId !== '') p.userId = filterUserId;
+    return p;
+  }, [from, to, status, filterUserId]);
+
+  const list = useQuery({
+    queryKey: ['sales', filterPayload],
+    queryFn: () => api<Sale[]>('sales.list', filterPayload),
+  });
+
+  // Cashier list for the manager filter dropdown.
+  const usersForFilter = useQuery({
+    queryKey: ['users'],
+    queryFn: () => api<UserRow[]>('users.list', {}),
+    enabled: isManager,
+  });
+
+  function resetFilters() {
+    setFrom(''); setTo(''); setStatus(''); setFilterUserId('');
+  }
 
   const open = useMutation({
     mutationFn: (id: number) => api<SaleDetail>('sales.get', { id }),
@@ -78,6 +114,49 @@ export function SalesPage() {
   return (
     <div>
       <PageHeader title={t('sales.title')} helpSlug="sales-checkout" />
+
+      {/* Filters */}
+      <div className="card p-3 mb-4 flex flex-wrap items-end gap-2">
+        <div>
+          <label className="label flex items-center gap-1"><Filter size={12} /> {t('common.from')}</label>
+          <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">{t('common.to')}</label>
+          <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">{t('common.status')}</label>
+          <select className="input" value={status} onChange={(e) => setStatus(e.target.value as any)}>
+            <option value="">{t('common.all')}</option>
+            <option value="completed">{t('sales.status.completed')}</option>
+            <option value="held">{t('sales.status.held')}</option>
+            <option value="voided">{t('sales.status.voided')}</option>
+            <option value="returned">{t('sales.status.returned')}</option>
+          </select>
+        </div>
+        {isManager && (
+          <div>
+            <label className="label">{t('users.title')}</label>
+            <select
+              className="input"
+              value={filterUserId}
+              onChange={(e) => setFilterUserId(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+            >
+              <option value="">{t('common.all')}</option>
+              {(usersForFilter.data ?? []).map((u) => (
+                <option key={u.id} value={u.id}>{u.fullName}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <button className="btn-secondary" onClick={resetFilters}>
+          <RotateCw size={14} /> {t('common.reset')}
+        </button>
+        <div className="ms-auto text-sm text-slate-500">
+          {(list.data ?? []).length} {t('sales.results')}
+        </div>
+      </div>
       <div className="card overflow-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50">

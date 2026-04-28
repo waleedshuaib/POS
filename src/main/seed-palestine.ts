@@ -254,6 +254,8 @@ export const PALESTINE_SETTINGS: Record<string, string> = {
   'language.default': 'ar',
   'receipt.header': 'شكراً لتسوقكم معنا',
   'receipt.footer': 'Thank you for shopping - شكراً لزيارتكم',
+  'receipt.logo_path': '',
+  'receipt.preview_default': 'true',
   'printer.enabled': 'false',
   'printer.type': 'usb',
   'printer.host': 'printer:auto',

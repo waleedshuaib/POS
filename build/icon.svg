@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Mizan POS app icon: balance scale on the brand-blue gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#0369A1"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="20" stdDeviation="20" flood-color="#000" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="url(#bg)"/>
+
+  <!-- Scale glyph, white, centered -->
+  <g fill="white" filter="url(#shadow)">
+    <!-- Center pillar -->
+    <rect x="488" y="320" width="48" height="420" rx="14"/>
+    <!-- Base -->
+    <rect x="320" y="740" width="384" height="48" rx="20"/>
+    <!-- Top crossbar -->
+    <rect x="220" y="296" width="584" height="32" rx="14"/>
+    <!-- Top knob -->
+    <circle cx="512" cy="240" r="44"/>
+    <!-- Left pan -->
+    <path d="M 240 380
+             L 360 380
+             A 60 60 0 0 1 380 440
+             L 220 440
+             A 60 60 0 0 1 240 380 Z"/>
+    <!-- Left chains -->
+    <line x1="270" y1="320" x2="260" y2="380" stroke="white" stroke-width="14" stroke-linecap="round"/>
+    <line x1="330" y1="320" x2="340" y2="380" stroke="white" stroke-width="14" stroke-linecap="round"/>
+    <!-- Right pan -->
+    <path d="M 664 380
+             L 784 380
+             A 60 60 0 0 1 804 440
+             L 644 440
+             A 60 60 0 0 1 664 380 Z"/>
+    <!-- Right chains -->
+    <line x1="694" y1="320" x2="684" y2="380" stroke="white" stroke-width="14" stroke-linecap="round"/>
+    <line x1="754" y1="320" x2="764" y2="380" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark "Mizan" small at bottom -->
+  <text x="512" y="900" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, sans-serif"
+        font-weight="700" font-size="92" fill="white" opacity="0.9">Mizan</text>
+</svg>

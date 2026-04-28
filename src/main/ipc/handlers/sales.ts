@@ -44,13 +44,29 @@ registerRoutes({
   'sales.list': defineRoute({
     input: z.object({
       status: z.enum(['completed', 'held', 'voided', 'returned']).optional(),
+      from: z.coerce.date().optional(),
+      to: z.coerce.date().optional(),
+      userId: z.number().optional(),
+      customerId: z.number().optional(),
       limit: z.number().optional(),
     }).optional().default({}),
     handler: (input, ctx) => {
       const cashierOnly = ctx.session?.role === 'cashier';
-      const userId = cashierOnly ? ctx.session!.userId : undefined;
-      if (input?.status) return saleRepo.listByStatus(input.status, input.limit ?? 200, userId);
-      return saleRepo.listRecent(input?.limit ?? 100, userId);
+      // Cashiers are forced to filter by self regardless of input
+      const userId = cashierOnly ? ctx.session!.userId : input?.userId;
+      // Adjust to start/end of day if just a date is given
+      let from = input?.from;
+      let to = input?.to;
+      if (from) { const d = new Date(from); d.setHours(0, 0, 0, 0); from = d; }
+      if (to) { const d = new Date(to); d.setHours(23, 59, 59, 999); to = d; }
+      return saleRepo.search({
+        status: input?.status,
+        from,
+        to,
+        userId,
+        customerId: input?.customerId,
+        limit: input?.limit ?? 200,
+      });
     },
   }),
   'sales.listHeld': defineRoute({

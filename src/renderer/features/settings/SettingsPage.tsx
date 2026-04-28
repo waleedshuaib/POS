@@ -60,6 +60,21 @@ export function SettingsPage() {
     api('printer.test', {}).catch(() => null);
   }
 
+  async function pickLogo() {
+    const result = await api<{ path: string } | null>('images.pick', {});
+    if (result) {
+      const next = { ...state, 'receipt.logo_path': result.path };
+      setState(next);
+      save.mutate(next);
+    }
+  }
+
+  function clearLogo() {
+    const next = { ...state, 'receipt.logo_path': '' };
+    setState(next);
+    save.mutate(next);
+  }
+
   function fmtSize(bytes: number) {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -112,6 +127,14 @@ export function SettingsPage() {
               />
               {t('settings.printerEnabled')}
             </label>
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={state['receipt.preview_default'] !== 'false'}
+                onChange={(e) => set('receipt.preview_default', e.target.checked ? 'true' : 'false')}
+              />
+              {t('settings.previewDefault')}
+            </label>
             <div>
               <label className="label">{t('settings.printerType')}</label>
               <select className="input" value={state['printer.type'] ?? 'usb'} onChange={(e) => set('printer.type', e.target.value)}>
@@ -126,6 +149,28 @@ export function SettingsPage() {
             <div>
               <label className="label">{t('settings.receiptFooter')}</label>
               <input className="input" value={state['receipt.footer'] ?? ''} onChange={(e) => set('receipt.footer', e.target.value)} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">{t('settings.receiptLogo')}</label>
+              <div className="flex items-center gap-3">
+                {state['receipt.logo_path'] ? (
+                  <>
+                    <img
+                      src={`file://${state['receipt.logo_path']}`}
+                      alt=""
+                      className="h-16 border border-slate-200 rounded bg-slate-50"
+                    />
+                    <span className="text-xs text-slate-500 truncate max-w-xs" title={state['receipt.logo_path']}>
+                      {state['receipt.logo_path']}
+                    </span>
+                    <button className="btn-secondary" onClick={pickLogo}>{t('settings.changeLogo')}</button>
+                    <button className="btn-danger" onClick={clearLogo}>{t('common.delete')}</button>
+                  </>
+                ) : (
+                  <button className="btn-secondary" onClick={pickLogo}>{t('settings.uploadLogo')}</button>
+                )}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">{t('settings.logoHint')}</div>
             </div>
           </div>
           <button className="btn-secondary" onClick={testPrinter}>

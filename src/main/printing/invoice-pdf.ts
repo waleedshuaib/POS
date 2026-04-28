@@ -28,6 +28,7 @@ export interface ReceiptData {
   changeDue: number;
   header?: string;
   footer?: string;
+  logoPath?: string;
   language: 'ar' | 'en';
 }
 
@@ -70,6 +71,28 @@ export async function renderReceiptPdf(data: ReceiptData, outPath: string, arabi
     });
     y -= 6;
   };
+
+  // Optional logo at the very top, centered, max ~60 px tall.
+  if (data.logoPath && existsSync(data.logoPath)) {
+    try {
+      const bytes = readFileSync(data.logoPath);
+      const ext = data.logoPath.toLowerCase().split('.').pop();
+      const img = ext === 'png' ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+      const targetH = 60;
+      const scale = targetH / img.height;
+      const w = img.width * scale;
+      const h = targetH;
+      page.drawImage(img, {
+        x: (width - w) / 2,
+        y: y - h,
+        width: w,
+        height: h,
+      });
+      y -= h + 6;
+    } catch {
+      // bad image — silently skip rather than break the receipt
+    }
+  }
 
   write(data.storeName, { bold: true, size: 12, align: 'center' });
   if (data.storeAddress) write(data.storeAddress, { align: 'center', size: 9 });

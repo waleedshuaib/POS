@@ -7,7 +7,8 @@ import { PageHeader } from '../../components/PageHeader';
 import { Modal } from '../../components/Modal';
 import { Field, ServerError, ValidationSummary } from '../../components/Validation';
 import { MoneyInput, NumberInput } from '../../components/NumberInput';
-import { Pencil, Plus, Trash2, Image as ImageIcon, Search } from 'lucide-react';
+import { Pencil, Plus, Trash2, Image as ImageIcon, Search, Upload } from 'lucide-react';
+import { ProductsImport } from './ProductsImport';
 
 interface Product {
   id: number;
@@ -76,6 +77,7 @@ export function ProductsPage() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Draft | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const list = useQuery({ queryKey: ['products', query], queryFn: () => api<Product[]>('products.search', { q: query }) });
   const cats = useQuery({ queryKey: ['categories'], queryFn: () => api<Category[]>('categories.list', {}) });
@@ -118,9 +120,14 @@ export function ProductsPage() {
         title={t('products.title')}
         helpSlug="products-inventory"
         right={
-          <button className="btn-primary" onClick={() => { setEditing(empty); setSubmitted(false); }}>
-            <Plus size={16} /> {t('products.add')}
-          </button>
+          <div className="flex gap-2">
+            <button className="btn-secondary" onClick={() => setShowImport(true)}>
+              <Upload size={14} /> {t('products.import.title')}
+            </button>
+            <button className="btn-primary" onClick={() => { setEditing(empty); setSubmitted(false); }}>
+              <Plus size={16} /> {t('products.add')}
+            </button>
+          </div>
         }
       />
       <div className="relative mb-4 max-w-md">
@@ -303,6 +310,8 @@ export function ProductsPage() {
           </>
         )}
       </Modal>
+
+      <ProductsImport open={showImport} onClose={() => setShowImport(false)} />
     </div>
   );
 }

@@ -113,6 +113,29 @@ export const saleRepo = {
       .orderBy(desc(schema.sales.createdAt))
       .all();
   },
+  /**
+   * Generic filter query: any combination of status, date range, cashier id.
+   * Used by the Sales page filters.
+   */
+  search(filters: {
+    status?: 'completed' | 'held' | 'voided' | 'returned';
+    from?: Date;
+    to?: Date;
+    userId?: number;
+    customerId?: number;
+    limit?: number;
+  }) {
+    const conds: any[] = [];
+    if (filters.status) conds.push(eq(schema.sales.status, filters.status));
+    if (filters.from) conds.push(gte(schema.sales.createdAt, filters.from));
+    if (filters.to) conds.push(lte(schema.sales.createdAt, filters.to));
+    if (filters.userId !== undefined) conds.push(eq(schema.sales.userId, filters.userId));
+    if (filters.customerId !== undefined) conds.push(eq(schema.sales.customerId, filters.customerId));
+
+    let q = db().select().from(schema.sales) as any;
+    if (conds.length > 0) q = q.where(and(...conds));
+    return q.orderBy(desc(schema.sales.createdAt)).limit(filters.limit ?? 200).all();
+  },
   countToday(userId?: number): { count: number; total: number } {
     const start = new Date();
     start.setHours(0, 0, 0, 0);

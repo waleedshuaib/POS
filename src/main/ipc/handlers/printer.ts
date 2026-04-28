@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { defineRoute, registerRoutes } from '../router';
 import { generateReceiptPdf, printViaEscPos } from '../../printing/receipt';
+import { settingsRepo } from '../../repos/settingsRepo';
 import { shell, BrowserWindow } from 'electron';
 
 const LangSchema = z.enum(['ar', 'en']);
@@ -22,12 +23,30 @@ registerRoutes({
     },
   }),
   'printer.printNow': defineRoute({
-    input: z.object({ saleId: z.number(), language: LangSchema.optional() }),
+    input: z.object({ saleId: z.number(), language: LangSchema.optional(), forcePreview: z.boolean().optional() }),
     handler: async (input) => {
       const lang = input.language ?? 'ar';
+      const previewDefault = settingsRepo.get('receipt.preview_default') === 'true';
+      const wantPreview = input.forcePreview === true || (input.forcePreview === undefined && previewDefault);
+
+      // PDF preview path: render the PDF, open it in a hidden window, and let
+      // the user click "Print" themselves via Electron's print dialog.
+      if (wantPreview) {
+        const pdf = await generateReceiptPdf(input.saleId, lang);
+        const win = new BrowserWindow({
+          width: 480,
+          height: 720,
+          title: `Receipt — ${input.saleId}`,
+          webPreferences: { sandbox: true },
+        });
+        await win.loadFile(pdf);
+        win.show();
+        return { method: 'preview', path: pdf };
+      }
+
+      // Silent print path: try thermal first, fall back to system print dialog.
       const res = await printViaEscPos(input.saleId, lang);
       if (!res.printed) {
-        // Fallback: open system print dialog via preview window showing the PDF.
         const pdf = await generateReceiptPdf(input.saleId, lang);
         const win = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
         await win.loadFile(pdf);
