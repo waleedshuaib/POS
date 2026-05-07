@@ -2,8 +2,9 @@
 # End-to-end verification for the POS backend.
 #
 # Runs typecheck, unit tests, integration tests, and the smoke scenario.
-# Everything runs through Electron's embedded Node so native modules
-# (better-sqlite3, argon2) only need to be compiled once for Electron's ABI.
+# Everything runs through Electron's embedded Node so the native SQLite
+# module only needs to be compiled once for Electron's ABI. (argon2 is
+# @node-rs/argon2 which ships abi-neutral prebuilds — no rebuild needed.)
 # After this script finishes you can run `npm run dev` directly — no rebuild
 # needed.
 #
